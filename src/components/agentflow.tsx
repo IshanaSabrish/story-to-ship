@@ -14,7 +14,7 @@ const statusStyle: Record<string, string> = {
 
 export function StatusChip({ status }: { status: string }) {
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize", statusStyle[status] ?? statusStyle.waiting)}>
+    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize", statusStyle[status] ?? statusStyle["waiting"])}>
       {status.replace("_", " ")}
     </span>
   );
