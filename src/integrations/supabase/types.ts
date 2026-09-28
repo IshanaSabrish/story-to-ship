@@ -14,7 +14,223 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_log: {
+        Row: {
+          action: string
+          agent: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          run_id: string | null
+        }
+        Insert: {
+          action: string
+          agent?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          run_id?: string | null
+        }
+        Update: {
+          action?: string
+          agent?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_steps: {
+        Row: {
+          agent: string
+          attempts: number
+          created_at: string
+          duration_ms: number
+          error: string | null
+          id: string
+          input: Json | null
+          output: Json | null
+          run_id: string
+          status: string
+          tokens: number
+          updated_at: string
+        }
+        Insert: {
+          agent: string
+          attempts?: number
+          created_at?: string
+          duration_ms?: number
+          error?: string | null
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          run_id: string
+          status?: string
+          tokens?: number
+          updated_at?: string
+        }
+        Update: {
+          agent?: string
+          attempts?: number
+          created_at?: string
+          duration_ms?: number
+          error?: string | null
+          id?: string
+          input?: Json | null
+          output?: Json | null
+          run_id?: string
+          status?: string
+          tokens?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approvals: {
+        Row: {
+          comment: string | null
+          created_at: string
+          decision: string
+          gate: number
+          id: string
+          role: string
+          run_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          decision: string
+          gate: number
+          id?: string
+          role: string
+          run_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          decision?: string
+          gate?: number
+          id?: string
+          role?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_items: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          kind: string
+          project_id: string | null
+          source_run: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          kind?: string
+          project_id?: string | null
+          source_run?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          project_id?: string | null
+          source_run?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      runs: {
+        Row: {
+          created_at: string
+          current_agent: string | null
+          id: string
+          project_id: string | null
+          request: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_agent?: string | null
+          id?: string
+          project_id?: string | null
+          request: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_agent?: string | null
+          id?: string
+          project_id?: string | null
+          request?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "runs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
