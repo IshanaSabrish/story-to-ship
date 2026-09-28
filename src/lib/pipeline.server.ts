@@ -1,4 +1,4 @@
-import { AGENTS, MAX_ATTEMPTS, STEP_BUDGET_TOKENS, type AgentKey } from "./agents";
+import { AGENTS, GATES, MAX_ATTEMPTS, STEP_BUDGET_TOKENS, type AgentKey } from "./agents";
 
 const PROMPTS: Record<AgentKey, string> = {
   requirement: `You are the Requirement Agent. Turn the feature request into user stories.
@@ -53,35 +53,59 @@ export async function log(runId: string, agent: string | null, action: string, d
   await db.from("activity_log").insert({ run_id: runId, agent, action, detail: (detail ?? null) as never });
 }
 
-/** Orchestrator: decides the next agent, runs it with one retry, escalates on second failure. */
+/** Orchestrator: decides the next agent, enforces human gates, retries once, escalates on second failure. */
 export async function runNext(runId: string) {
   const db = await admin();
   const { data: run } = await db.from("runs").select("*").eq("id", runId).single();
   if (!run) throw new Error("Run not found");
   if (run.status !== "running") return { status: run.status };
 
-  const { data: steps } = await db.from("agent_steps").select("*").eq("run_id", runId).order("created_at");
+  const [{ data: steps }, { data: approvals }] = await Promise.all([
+    db.from("agent_steps").select("*").eq("run_id", runId).order("created_at"),
+    db.from("approvals").select("*").eq("run_id", runId).order("created_at"),
+  ]);
   const done = (steps ?? []).filter((s) => s.status === "done");
   const next = AGENTS.find((a) => !done.some((s) => s.agent === a.key));
+
+  const gateOk = (gate: number) => {
+    const agent = GATES[gate]!.after;
+    const step = [...done].reverse().find((s) => s.agent === agent);
+    if (!step) return false;
+    return (approvals ?? []).some((a) => a.gate === gate && a.decision === "approve" && a.created_at >= step.updated_at);
+  };
+  const needed = next?.key === "design" ? [1] : next?.key === "devops" ? [2, 3] : [];
+  for (const g of needed) {
+    if (!gateOk(g)) {
+      await db.from("runs").update({ status: "awaiting_approval", pending_gate: g, updated_at: new Date().toISOString() }).eq("id", runId);
+      await log(runId, null, "gate_opened", { gate: g, role: GATES[g]!.roleLabel });
+      return { status: "awaiting_approval" };
+    }
+  }
+
   if (!next) {
-    await db.from("runs").update({ status: "completed", current_agent: null, updated_at: new Date().toISOString() }).eq("id", runId);
-    await log(runId, null, "run_completed");
+    await db.from("runs").update({ status: "completed", current_agent: null, pending_gate: null, updated_at: new Date().toISOString() }).eq("id", runId);
+    const design = done.find((s) => s.agent === "design")?.output as { decisions?: { decision: string }[] } | null;
+    const items = (design?.decisions ?? []).slice(0, 3).map((d) => ({ project_id: run.project_id, kind: "decision", content: d.decision, source_run: runId }));
+    if (items.length) await db.from("memory_items").insert(items);
+    await log(runId, null, "run_completed", { memory_items_added: items.length });
     return { status: "completed" };
   }
 
-  const { data: memory } = await db.from("memory_items").select("kind, content").eq("project_id", run.project_id!);
+  const { data: memory } = await db.from("memory_items").select("kind, content").eq("project_id", run.project_id!).order("created_at", { ascending: false }).limit(15);
   const prior = Object.fromEntries(done.map((s) => [s.agent, s.output]));
+  const feedback = (approvals ?? []).filter((a) => a.decision === "changes" && GATES[a.gate]?.rerun === next.key && a.comment).map((a) => `- ${a.comment}`);
   const context = redact(
-    `FEATURE REQUEST:\n${run.request}\n\nSHARED MEMORY:\n${(memory ?? []).map((m) => `- [${m.kind}] ${m.content}`).join("\n")}\n\nPREVIOUS AGENT OUTPUTS:\n${JSON.stringify(prior)}`,
+    `FEATURE REQUEST:\n${run.request}\n\nSHARED MEMORY:\n${(memory ?? []).map((m) => `- [${m.kind}] ${m.content}`).join("\n")}\n\nPREVIOUS AGENT OUTPUTS:\n${JSON.stringify(prior)}` +
+      (feedback.length ? `\n\nHUMAN REVIEWER REQUESTED CHANGES (address these):\n${feedback.join("\n")}` : ""),
   );
 
-  await db.from("runs").update({ current_agent: next.key, updated_at: new Date().toISOString() }).eq("id", runId);
+  await db.from("runs").update({ current_agent: next.key, pending_gate: null, updated_at: new Date().toISOString() }).eq("id", runId);
   const { data: step } = await db
     .from("agent_steps")
-    .insert({ run_id: runId, agent: next.key, status: "running", input: { request: run.request, prior_agents: Object.keys(prior) } })
+    .insert({ run_id: runId, agent: next.key, status: "running", input: { request: run.request, prior_agents: Object.keys(prior), feedback } })
     .select()
     .single();
-  await log(runId, next.key, "agent_started", { budget_tokens: STEP_BUDGET_TOKENS });
+  await log(runId, next.key, "agent_started", { budget_tokens: STEP_BUDGET_TOKENS, with_feedback: feedback.length > 0 });
 
   let lastErr = "";
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -100,4 +124,23 @@ export async function runNext(runId: string) {
   await db.from("runs").update({ status: "escalated", updated_at: new Date().toISOString() }).eq("id", runId);
   await log(runId, null, "escalated_to_human", { agent: next.key, error: lastErr });
   return { status: "escalated" };
+}
+
+/** Human decision at a gate. */
+export async function decide(runId: string, gate: number, decision: "approve" | "changes" | "reject", comment?: string) {
+  const db = await admin();
+  const g = GATES[gate];
+  if (!g) throw new Error("Unknown gate");
+  const { data: run } = await db.from("runs").select("status, pending_gate").eq("id", runId).single();
+  if (run?.status !== "awaiting_approval" || run.pending_gate !== gate) throw new Error("This gate is not open");
+  await db.from("approvals").insert({ run_id: runId, gate, role: g.role, decision, comment: comment ? redact(comment) : null });
+  await log(runId, null, `gate_${decision}`, { gate, role: g.roleLabel, comment });
+  if (decision === "reject") {
+    await db.from("runs").update({ status: "rejected", pending_gate: null, updated_at: new Date().toISOString() }).eq("id", runId);
+    return;
+  }
+  if (decision === "changes") {
+    await db.from("agent_steps").update({ status: "revised" }).eq("run_id", runId).eq("status", "done").in("agent", g.revise);
+  }
+  await db.from("runs").update({ status: "running", pending_gate: null, updated_at: new Date().toISOString() }).eq("id", runId);
 }
