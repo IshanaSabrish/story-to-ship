@@ -1,0 +1,1 @@
+ALTER TABLE public.runs ADD COLUMN pending_gate int;

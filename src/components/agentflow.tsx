@@ -10,12 +10,15 @@ const statusStyle: Record<string, string> = {
   failed: "bg-destructive/15 text-destructive",
   completed: "bg-accent text-accent-foreground",
   escalated: "bg-destructive/15 text-destructive",
+  rejected: "bg-destructive/15 text-destructive",
+  awaiting_approval: "bg-warning/30 text-foreground",
+  revised: "bg-muted text-muted-foreground",
 };
 
 export function StatusChip({ status }: { status: string }) {
   return (
     <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize", statusStyle[status] ?? statusStyle["waiting"])}>
-      {status.replace("_", " ")}
+      {status.replaceAll("_", " ")}
     </span>
   );
 }
@@ -60,6 +63,46 @@ export function SafetyPanel() {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+export function Card({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={cn("rounded-2xl bg-card p-5 shadow-soft sm:p-6", className)}>
+      {title && <h2 className="mb-3 text-xl">{title}</h2>}
+      {children}
+    </section>
+  );
+}
+
+export function CodeBlock({ children }: { children: string }) {
+  return <pre className="max-h-96 overflow-auto rounded-lg bg-primary p-3 font-mono text-xs leading-relaxed text-primary-foreground">{children}</pre>;
+}
+
+export function OutputView({ value, depth = 0 }: { value: unknown; depth?: number }): React.ReactNode {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") return value.includes("\n") ? <CodeBlock>{value}</CodeBlock> : <span>{value}</span>;
+  if (typeof value !== "object") return <span>{String(value)}</span>;
+  if (Array.isArray(value)) {
+    return (
+      <ul className="space-y-2">
+        {value.map((v, i) => (
+          <li key={i} className={typeof v === "object" ? "rounded-lg border bg-background p-3" : "ml-4 list-disc"}>
+            <OutputView value={v} depth={depth + 1} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+        <div key={k}>
+          <p className={depth === 0 ? "mb-1 font-serif text-lg capitalize" : "text-xs font-semibold uppercase tracking-wide text-muted-foreground"}>{k.replaceAll("_", " ")}</p>
+          <OutputView value={v} depth={depth + 1} />
+        </div>
+      ))}
     </div>
   );
 }
