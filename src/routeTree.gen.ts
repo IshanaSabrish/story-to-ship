@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RunsIdRouteImport } from './routes/runs.$id'
+import { Route as RunsIdIndexRouteImport } from './routes/runs.$id.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,38 @@ const RunsIdRoute = RunsIdRouteImport.update({
   path: '/runs/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RunsIdIndexRoute = RunsIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RunsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/runs/$id': typeof RunsIdRoute
+  '/runs/$id': typeof RunsIdRouteWithChildren
+  '/runs/$id/': typeof RunsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/runs/$id': typeof RunsIdRoute
+  '/runs/$id': typeof RunsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/runs/$id': typeof RunsIdRoute
+  '/runs/$id': typeof RunsIdRouteWithChildren
+  '/runs/$id/': typeof RunsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/runs/$id'
+  fullPaths: '/' | '/runs/$id' | '/runs/$id/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/runs/$id'
-  id: '__root__' | '/' | '/runs/$id'
+  id: '__root__' | '/' | '/runs/$id' | '/runs/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  RunsIdRoute: typeof RunsIdRoute
+  RunsIdRoute: typeof RunsIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +73,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RunsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/runs/$id/': {
+      id: '/runs/$id/'
+      path: '/'
+      fullPath: '/runs/$id/'
+      preLoaderRoute: typeof RunsIdIndexRouteImport
+      parentRoute: typeof RunsIdRoute
+    }
   }
 }
 
+interface RunsIdRouteChildren {
+  RunsIdIndexRoute: typeof RunsIdIndexRoute
+}
+
+const RunsIdRouteChildren: RunsIdRouteChildren = {
+  RunsIdIndexRoute: RunsIdIndexRoute,
+}
+
+const RunsIdRouteWithChildren =
+  RunsIdRoute._addFileChildren(RunsIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  RunsIdRoute: RunsIdRoute,
+  RunsIdRoute: RunsIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
