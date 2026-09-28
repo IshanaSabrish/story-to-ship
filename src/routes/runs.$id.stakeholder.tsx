@@ -7,6 +7,7 @@ import { arr, collectOutputs, type Outputs } from "@/lib/outputs";
 import { Card, CodeBlock, StatusChip } from "@/components/agentflow";
 import { GatePanel } from "@/components/gate-panel";
 import { runQuery } from "./runs.$id";
+import type { getRun } from "@/lib/pipeline.functions";
 
 export const Route = createFileRoute("/runs/$id/stakeholder")({
   head: () => ({
@@ -59,7 +60,7 @@ function Stakeholder() {
   );
 }
 
-type Data = ReturnType<typeof runQuery>["queryFn"] extends never ? never : Awaited<ReturnType<NonNullable<ReturnType<typeof runQuery>["queryFn"]>>>;
+type Data = Awaited<ReturnType<typeof getRun>>;
 
 function RoleBody({ role, o, data }: { role: RoleKey; o: Outputs; data: Data }) {
   const stories = arr(o.requirement?.stories);

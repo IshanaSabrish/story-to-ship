@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { RoleProvider, useRole } from "../lib/role";
+import { ROLES, type RoleKey } from "../lib/agents";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -118,16 +120,37 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <RoleProvider>
       <header className="bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-accent text-xs font-bold text-accent-foreground">AF</span>
             <span className="font-serif text-xl">AgentFlow</span>
           </Link>
-          <span className="hidden text-xs text-primary-foreground/60 sm:block">Six agents. Humans decide.</span>
+          <HeaderNav />
         </div>
       </header>
       <Outlet />
+      </RoleProvider>
     </QueryClientProvider>
+  );
+}
+
+function HeaderNav() {
+  const { role, setRole } = useRole();
+  const link = "rounded-full px-3 py-1.5 text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground";
+  return (
+    <nav className="flex items-center gap-1 sm:gap-2">
+      <Link to="/" className={link} activeOptions={{ exact: true }} activeProps={{ className: "bg-sidebar-accent !text-primary-foreground" }}>Dashboard</Link>
+      <Link to="/memory" className={link} activeProps={{ className: "bg-sidebar-accent !text-primary-foreground" }}>Memory</Link>
+      <select
+        aria-label="Acting as role"
+        value={role}
+        onChange={(e) => setRole(e.target.value as RoleKey)}
+        className="ml-1 hidden h-8 rounded-full border border-sidebar-border bg-sidebar-accent px-3 text-xs text-primary-foreground sm:block"
+      >
+        {ROLES.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+      </select>
+    </nav>
   );
 }

@@ -10,12 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as RunsIdRouteImport } from './routes/runs.$id'
 import { Route as RunsIdIndexRouteImport } from './routes/runs.$id.index'
+import { Route as RunsIdStakeholderRouteImport } from './routes/runs.$id.stakeholder'
+import { Route as RunsIdTraceRouteImport } from './routes/runs.$id.trace'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MemoryRoute = MemoryRouteImport.update({
+  id: '/memory',
+  path: '/memory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RunsIdRoute = RunsIdRouteImport.update({
@@ -28,32 +36,66 @@ const RunsIdIndexRoute = RunsIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RunsIdRoute,
 } as any)
+const RunsIdStakeholderRoute = RunsIdStakeholderRouteImport.update({
+  id: '/stakeholder',
+  path: '/stakeholder',
+  getParentRoute: () => RunsIdRoute,
+} as any)
+const RunsIdTraceRoute = RunsIdTraceRouteImport.update({
+  id: '/trace',
+  path: '/trace',
+  getParentRoute: () => RunsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/memory': typeof MemoryRoute
   '/runs/$id': typeof RunsIdRouteWithChildren
+  '/runs/$id/stakeholder': typeof RunsIdStakeholderRoute
+  '/runs/$id/trace': typeof RunsIdTraceRoute
   '/runs/$id/': typeof RunsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/memory': typeof MemoryRoute
+  '/runs/$id/stakeholder': typeof RunsIdStakeholderRoute
+  '/runs/$id/trace': typeof RunsIdTraceRoute
   '/runs/$id': typeof RunsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/memory': typeof MemoryRoute
   '/runs/$id': typeof RunsIdRouteWithChildren
+  '/runs/$id/stakeholder': typeof RunsIdStakeholderRoute
+  '/runs/$id/trace': typeof RunsIdTraceRoute
   '/runs/$id/': typeof RunsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/runs/$id' | '/runs/$id/'
+  fullPaths:
+    | '/'
+    | '/memory'
+    | '/runs/$id'
+    | '/runs/$id/stakeholder'
+    | '/runs/$id/trace'
+    | '/runs/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/runs/$id'
-  id: '__root__' | '/' | '/runs/$id' | '/runs/$id/'
+  to:
+    '/' | '/memory' | '/runs/$id/stakeholder' | '/runs/$id/trace' | '/runs/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/memory'
+    | '/runs/$id'
+    | '/runs/$id/stakeholder'
+    | '/runs/$id/trace'
+    | '/runs/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MemoryRoute: typeof MemoryRoute
   RunsIdRoute: typeof RunsIdRouteWithChildren
 }
 
@@ -64,6 +106,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/memory': {
+      id: '/memory'
+      path: '/memory'
+      fullPath: '/memory'
+      preLoaderRoute: typeof MemoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/runs/$id': {
@@ -80,14 +129,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RunsIdIndexRouteImport
       parentRoute: typeof RunsIdRoute
     }
+    '/runs/$id/stakeholder': {
+      id: '/runs/$id/stakeholder'
+      path: '/stakeholder'
+      fullPath: '/runs/$id/stakeholder'
+      preLoaderRoute: typeof RunsIdStakeholderRouteImport
+      parentRoute: typeof RunsIdRoute
+    }
+    '/runs/$id/trace': {
+      id: '/runs/$id/trace'
+      path: '/trace'
+      fullPath: '/runs/$id/trace'
+      preLoaderRoute: typeof RunsIdTraceRouteImport
+      parentRoute: typeof RunsIdRoute
+    }
   }
 }
 
 interface RunsIdRouteChildren {
+  RunsIdStakeholderRoute: typeof RunsIdStakeholderRoute
+  RunsIdTraceRoute: typeof RunsIdTraceRoute
   RunsIdIndexRoute: typeof RunsIdIndexRoute
 }
 
 const RunsIdRouteChildren: RunsIdRouteChildren = {
+  RunsIdStakeholderRoute: RunsIdStakeholderRoute,
+  RunsIdTraceRoute: RunsIdTraceRoute,
   RunsIdIndexRoute: RunsIdIndexRoute,
 }
 
@@ -96,6 +163,7 @@ const RunsIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MemoryRoute: MemoryRoute,
   RunsIdRoute: RunsIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
