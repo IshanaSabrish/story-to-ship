@@ -198,6 +198,7 @@ export type Database = {
           created_at: string
           current_agent: string | null
           id: string
+          pending_gate: number | null
           project_id: string | null
           request: string
           status: string
@@ -207,6 +208,7 @@ export type Database = {
           created_at?: string
           current_agent?: string | null
           id?: string
+          pending_gate?: number | null
           project_id?: string | null
           request: string
           status?: string
@@ -216,6 +218,7 @@ export type Database = {
           created_at?: string
           current_agent?: string | null
           id?: string
+          pending_gate?: number | null
           project_id?: string | null
           request?: string
           status?: string
