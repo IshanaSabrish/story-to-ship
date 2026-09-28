@@ -86,7 +86,7 @@ function RunView() {
             const step = stepFor(a.key);
             const st = (step?.status ?? "waiting") as StepStatus;
             return (
-              <div key={a.key} className="flex flex-1 flex-col items-center lg:flex-row">
+              <div key={a.key} className="flex flex-1 flex-col items-center lg:flex-row lg:items-stretch">
                 <button
                   onClick={() => step && setSelected(a.key)}
                   disabled={!step}
@@ -100,7 +100,7 @@ function RunView() {
                   </div>
                 </button>
                 {i < AGENTS.length - 1 && (
-                  <ChevronRight className={`my-1 h-4 w-4 rotate-90 shrink-0 transition-colors duration-500 lg:mx-1 lg:rotate-0 ${st === "done" ? "text-accent" : "text-border"}`} />
+                  <ChevronRight className={`my-1 h-4 w-4 rotate-90 shrink-0 self-center transition-colors duration-500 lg:mx-1 lg:rotate-0 ${st === "done" ? "text-accent" : "text-border"}`} />
                 )}
               </div>
             );
