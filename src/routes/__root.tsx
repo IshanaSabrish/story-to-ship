@@ -89,7 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap",
       },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
@@ -121,11 +121,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
-      <header className="bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+      <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-accent text-xs font-bold text-accent-foreground">AF</span>
-            <span className="font-serif text-xl">AgentFlow</span>
+            <span className="relative grid h-8 w-8 place-items-center rounded-md border border-accent/40 bg-accent/10 font-mono text-[10px] font-bold text-accent">AF<span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" /></span>
+            <span className="font-serif text-lg font-semibold">AgentFlow</span>
+            <span className="hidden font-mono text-[10px] text-muted-foreground md:inline">/ SDLC CONTROL</span>
           </Link>
           <HeaderNav />
         </div>
@@ -138,7 +139,7 @@ function RootComponent() {
 
 function HeaderNav() {
   const { role, setRole } = useRole();
-  const link = "rounded-full px-3 py-1.5 text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground";
+  const link = "rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground";
   return (
     <nav className="flex items-center gap-1 sm:gap-2">
       <Link to="/" className={link} activeOptions={{ exact: true }} activeProps={{ className: "bg-sidebar-accent !text-primary-foreground" }}>Dashboard</Link>
@@ -147,7 +148,7 @@ function HeaderNav() {
         aria-label="Acting as role"
         value={role}
         onChange={(e) => setRole(e.target.value as RoleKey)}
-        className="ml-1 hidden h-8 rounded-full border border-sidebar-border bg-sidebar-accent px-3 text-xs text-primary-foreground sm:block"
+        className="ml-1 hidden h-8 rounded-md border border-sidebar-border bg-sidebar-accent px-3 text-xs text-sidebar-foreground sm:block"
       >
         {ROLES.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
       </select>

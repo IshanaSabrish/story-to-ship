@@ -11,3 +11,4 @@
 
 - Agents + orchestrator live in `src/lib/pipeline.server.ts`, called via server functions (not edge functions); the client drives one agent per call to avoid request timeouts.
 - v1 has no auth: tables are RLS-locked and only reached server-side via the admin client.
+- Render the six-stage SDLC journey through the shared ProcessMap component so dashboard and run views communicate the same workflow.
