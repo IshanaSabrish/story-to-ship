@@ -50,7 +50,7 @@ export function SafetyPanel() {
     "Full audit log of every agent action",
   ];
   return (
-    <div className="rounded-2xl bg-card p-5 shadow-soft">
+    <div className="rounded-lg border bg-card p-5 shadow-soft">
       <div className="mb-3 flex items-center gap-2">
         <ShieldCheck className="h-4 w-4 text-accent" />
         <h3 className="text-lg">Safety</h3>
@@ -69,7 +69,7 @@ export function SafetyPanel() {
 
 export function Card({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-2xl bg-card p-5 shadow-soft sm:p-6", className)}>
+    <section className={cn("rounded-lg border bg-card p-5 shadow-soft sm:p-6", className)}>
       {title && <h2 className="mb-3 text-xl">{title}</h2>}
       {children}
     </section>
@@ -99,7 +99,7 @@ export function OutputView({ value, depth = 0 }: { value: unknown; depth?: numbe
     <div className="space-y-2">
       {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
         <div key={k}>
-          <p className={depth === 0 ? "mb-1 font-serif text-lg capitalize" : "text-xs font-semibold uppercase tracking-wide text-muted-foreground"}>{k.replaceAll("_", " ")}</p>
+          <p className={depth === 0 ? "mb-1 font-serif text-lg capitalize" : "text-xs font-semibold uppercase text-muted-foreground"}>{k.replaceAll("_", " ")}</p>
           <OutputView value={v} depth={depth + 1} />
         </div>
       ))}

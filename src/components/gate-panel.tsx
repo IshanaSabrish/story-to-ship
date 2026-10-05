@@ -40,7 +40,7 @@ export function GatePanel({ runId, pendingGate, approvals }: { runId: string; pe
   }
 
   return (
-    <div className="rounded-2xl bg-card p-5 shadow-soft">
+    <div className="rounded-lg border bg-card p-5 shadow-soft">
       <h3 className="text-lg">Human approval gates</h3>
       <ol className="mt-3 space-y-3">
         {gates.map(({ g, info, last, open }) => {
